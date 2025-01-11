@@ -2,13 +2,52 @@
 
 A delightful Python game where you build a snowman by rolling and stacking snowballs, with a celebratory animation when completed!
 
+## Running the Game
+
+### Normal Mode
+```bash
+python src/main.py
+```
+Play the game normally with keyboard controls:
+- Arrow keys to move
+- Space to roll/place snowballs
+
+### Agent/Test Mode
+```bash
+python src/main.py --agent
+```
+Runs the game in automated testing mode:
+- Auto-closes after 5 seconds
+- Takes screenshots automatically
+- Useful for development and testing
+
+## Current Progress Screenshots
+
+### Menu Screen
+![Menu Screen](test_screenshots/menu.png)
+*The main menu with title and play button*
+
+### Game Screen
+![Game Screen](test_screenshots/game_start.png)
+*The game screen showing the rolling and building zones*
+
 ## Current Status
 
 The game is currently in early development with the following components implemented:
-- Basic game window setup using Pygame Zero
-- Initial test framework with pytest
-- Project structure and documentation
-- Basic game states (Menu, Playing, Celebration)
+- ✅ Basic game window setup using Pygame
+- ✅ Initial test framework with pytest
+- ✅ Project structure and documentation
+- ✅ Game states (Menu, Playing, Celebration)
+- ✅ Snowball rolling mechanics
+- ✅ Snowball stacking system
+- ✅ Visual feedback for stacking
+- ✅ Automated testing with `--agent` mode
+
+### In Progress
+- [ ] Decorations (carrot nose, coal eyes)
+- [ ] Celebration animation
+- [ ] Sound effects
+- [ ] Background music
 
 ## Roadmap
 
