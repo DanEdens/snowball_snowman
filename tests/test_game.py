@@ -29,14 +29,20 @@ def test_game_start_and_screenshot(game_window):
     # Initialize game
     main.init_game()
     
-    # Draw initial frame and save menu screenshot
+    # Clear screen and draw initial frame
+    game_window.fill(main.BLACK)
     main.draw()
+    pygame.display.flip()
+    
+    # Save menu screenshot
     os.makedirs('test_screenshots', exist_ok=True)
     pygame.image.save(game_window, 'test_screenshots/menu.png')
     
     # Start game and draw game frame
     main.set_game_state(main.PLAYING)
+    game_window.fill(main.BLACK)
     main.draw()
+    pygame.display.flip()
     pygame.image.save(game_window, 'test_screenshots/game_start.png')
     
     print("Screenshots saved in test_screenshots directory")

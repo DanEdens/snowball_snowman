@@ -102,7 +102,9 @@ clock = pygame.time.Clock()
 
 # Load play button
 play_button_img = pygame.image.load(os.path.join('src', 'images', 'play_button.png'))
-play_button_rect = play_button_img.get_rect(center=(WIDTH // 2, 2 * HEIGHT // 3))
+play_button_rect = play_button_img.get_rect()
+play_button_rect.centerx = WIDTH // 2
+play_button_rect.centery = 2 * HEIGHT // 3
 
 # Game objects
 world = World(WIDTH, HEIGHT)
