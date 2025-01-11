@@ -7,6 +7,7 @@ from pygame import Rect, Surface
 from game.player import Player
 from game.snowman import Snowball
 from game.world import World
+from game.snowman import Snowman
 
 # Initialize pygame
 pygame.init()
@@ -21,14 +22,28 @@ MENU = 'menu'
 PLAYING = 'playing'
 CELEBRATION = 'celebration'
 
+# Colors
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+GREEN = (0, 255, 0, 100)  # Semi-transparent green for stacking indicator
+
 # Debug settings
 DEBUG_AUTO_CLOSE = True  # Set to True to auto-close after 5 seconds
 DEBUG_START_TIME = pygame.time.get_ticks()  # Get the start time
 
-def find_stackable_snowball(new_ball, placed_balls):
+def find_stackable_snowball(new_ball, placed_balls, snowmen):
     """Find a snowball that the new ball can stack on"""
+    # First check existing snowmen for incomplete stacks
+    for snowman in snowmen:
+        if not snowman.is_complete:
+            stackable = snowman.get_stackable_ball()
+            if stackable and new_ball.can_stack_on(stackable):
+                return stackable
+    
+    # Then check for new potential base balls
     # Sort balls by size (largest first) to prefer stacking on larger balls
-    sorted_balls = sorted(placed_balls, key=lambda b: b.size, reverse=True)
+    unattached_balls = [b for b in placed_balls if not b.stacked_on and not b.stacked_by]
+    sorted_balls = sorted(unattached_balls, key=lambda b: b.size, reverse=True)
     
     for ball in sorted_balls:
         if new_ball.can_stack_on(ball):
@@ -37,11 +52,12 @@ def find_stackable_snowball(new_ball, placed_balls):
 
 def reset_game():
     """Reset the game state for testing"""
-    global game_state, player, active_snowball, placed_snowballs
+    global game_state, player, active_snowball, placed_snowballs, snowmen
     game_state = MENU
     player = None
     active_snowball = None
     placed_snowballs = []
+    snowmen = []
 
 # Current game state
 game_state = MENU
@@ -60,6 +76,7 @@ player = None
 active_snowball = None
 world = World(WIDTH, HEIGHT)
 placed_snowballs = []
+snowmen = []  # List to track complete and in-progress snowmen
 
 def draw_menu():
     """Draw the main menu with title and play button"""
@@ -94,33 +111,56 @@ def draw_game():
             # Draw snowball
             pygame.draw.circle(
                 screen,
-                (255, 255, 255),  # White
+                WHITE,
                 (int(player.rolling_snowball.position.x), int(player.rolling_snowball.position.y)),
                 int(player.rolling_snowball.size)
             )
             pygame.draw.circle(
                 screen,
-                (0, 0, 0),  # Black outline
+                BLACK,
                 (int(player.rolling_snowball.position.x), int(player.rolling_snowball.position.y)),
                 int(player.rolling_snowball.size),
                 1  # Line width
             )
+            
+            # Draw stacking indicator if near a stackable ball
+            if world.building_zone.collidepoint(player.position):
+                stackable = find_stackable_snowball(player.rolling_snowball, placed_snowballs, snowmen)
+                if stackable:
+                    # Draw green circle around stackable ball
+                    pygame.draw.circle(
+                        screen,
+                        GREEN,
+                        (int(stackable.position.x), int(stackable.position.y)),
+                        int(stackable.size + 5)  # Slightly larger than the ball
+                    )
     
-    # Draw placed snowballs
+    # Draw placed snowballs and snowmen
     for snowball in placed_snowballs:
         pygame.draw.circle(
             screen,
-            (255, 255, 255),  # White
+            WHITE,
             (int(snowball.position.x), int(snowball.position.y)),
             int(snowball.size)
         )
         pygame.draw.circle(
             screen,
-            (0, 0, 0),  # Black outline
+            BLACK,
             (int(snowball.position.x), int(snowball.position.y)),
             int(snowball.size),
             1  # Line width
         )
+        
+        # Draw completion indicator for complete snowmen
+        for snowman in snowmen:
+            if snowman.is_complete and snowball in snowman.all_balls:
+                pygame.draw.circle(
+                    screen,
+                    (200, 255, 200),  # Light green
+                    (int(snowball.position.x), int(snowball.position.y)),
+                    int(snowball.size + 2),
+                    1  # Line width
+                )
 
 def draw():
     """Draw the current game state"""
@@ -137,7 +177,7 @@ def draw():
 
 def handle_input():
     """Handle keyboard and mouse input"""
-    global game_state, player, placed_snowballs
+    global game_state, player, placed_snowballs, snowmen
     
     # Debug auto-close after 5 seconds
     if DEBUG_AUTO_CLOSE and pygame.time.get_ticks() - DEBUG_START_TIME > 5000:
@@ -165,10 +205,28 @@ def handle_input():
             placed = player.place_snowball(world)
             if placed:
                 # Try to stack the snowball
-                stackable = find_stackable_snowball(placed, placed_snowballs)
+                stackable = find_stackable_snowball(placed, placed_snowballs, snowmen)
                 if stackable:
                     placed.stack_on(stackable)
                     print("Stacked snowball!")
+                    
+                    # Check if this creates or adds to a snowman
+                    added_to_snowman = False
+                    for snowman in snowmen:
+                        if stackable in snowman.all_balls:
+                            snowman.add_ball(placed)
+                            added_to_snowman = True
+                            if snowman.is_complete:
+                                print("Snowman completed!")
+                                if game_state != CELEBRATION:
+                                    game_state = CELEBRATION
+                            break
+                    
+                    if not added_to_snowman and not stackable.stacked_on:
+                        # Start a new snowman with these balls
+                        snowmen.append(Snowman(stackable))
+                        snowmen[-1].add_ball(placed)
+                
                 placed_snowballs.append(placed)
         
         # Update all snowballs

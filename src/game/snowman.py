@@ -61,3 +61,47 @@ class Snowball:
         if self.stacked_by:
             self.stacked_by.stacked_on = None
             self.stacked_by = None
+
+class Snowman:
+    """A class to manage a complete snowman made of stacked snowballs"""
+    def __init__(self, base_ball):
+        self.base = base_ball
+        self.middle = None
+        self.head = None
+        self.is_complete = False
+        
+    @property
+    def all_balls(self):
+        """Return all snowballs in this snowman"""
+        balls = [self.base]
+        if self.middle:
+            balls.append(self.middle)
+        if self.head:
+            balls.append(self.head)
+        return balls
+    
+    def add_ball(self, ball):
+        """Try to add a ball to this snowman"""
+        if self.is_complete:
+            return False
+            
+        if not self.middle and ball.size < self.base.size:
+            self.middle = ball
+            ball.stack_on(self.base)
+            return True
+            
+        if self.middle and not self.head and ball.size < self.middle.size:
+            self.head = ball
+            ball.stack_on(self.middle)
+            self.is_complete = True
+            return True
+            
+        return False
+    
+    def get_stackable_ball(self):
+        """Return the snowball that can be stacked on, if any"""
+        if not self.middle:
+            return self.base
+        if not self.head:
+            return self.middle
+        return None

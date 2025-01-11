@@ -8,7 +8,7 @@ from pygame.event import Event
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 from game.player import Player
-from game.snowman import Snowball
+from game.snowman import Snowball, Snowman
 from game.world import World
 import main  # Import the main game module
 
@@ -161,3 +161,54 @@ def test_invalid_stacking():
     ball2.unstack()
     assert ball1.stacked_by is None, "Ball1 should not have anything stacked on it"
     assert ball2.stacked_on is None, "Ball2 should not be stacked on anything" 
+
+def test_snowman_completion():
+    """Test building a complete snowman"""
+    # Create three snowballs of decreasing size
+    base = Snowball(100, 100)
+    middle = Snowball(100, 50)
+    head = Snowball(100, 0)
+    
+    # Set appropriate sizes
+    base.size = 60
+    middle.size = 40
+    head.size = 20
+    
+    # Create snowman with base
+    snowman = Snowman(base)
+    assert not snowman.is_complete, "New snowman should not be complete"
+    
+    # Add middle ball
+    assert snowman.add_ball(middle), "Should be able to add middle ball"
+    assert snowman.middle == middle, "Middle ball should be set"
+    assert not snowman.is_complete, "Snowman with two balls should not be complete"
+    
+    # Add head
+    assert snowman.add_ball(head), "Should be able to add head"
+    assert snowman.head == head, "Head should be set"
+    assert snowman.is_complete, "Snowman with three balls should be complete"
+    
+    # Try adding another ball
+    extra_ball = Snowball(100, -50)
+    extra_ball.size = 10
+    assert not snowman.add_ball(extra_ball), "Should not be able to add ball to complete snowman"
+
+def test_snowman_size_requirements():
+    """Test size requirements for snowman building"""
+    base = Snowball(100, 100)
+    same_size = Snowball(100, 50)
+    bigger = Snowball(100, 0)
+    
+    # Set sizes
+    base.size = 40
+    same_size.size = 40
+    bigger.size = 50
+    
+    # Create snowman
+    snowman = Snowman(base)
+    
+    # Try adding same-sized ball
+    assert not snowman.add_ball(same_size), "Should not be able to add same-sized ball"
+    
+    # Try adding bigger ball
+    assert not snowman.add_ball(bigger), "Should not be able to add bigger ball"
