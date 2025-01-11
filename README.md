@@ -21,6 +21,12 @@ In Snowball Snowman, players become master snow sculptors in a winter wonderland
   - Warmer temps make snow melt faster but stick better
   - Colder temps preserve snow longer but make it harder to shape
   - Watch the thermometer for changing conditions!
+- **Celebration Animation:**
+  - When you complete a snowman, watch it come to life!
+  - Carrot nose magically appears
+  - Hat floats down from above
+  - Stick arms pop out from the sides
+  - Your snowman does a happy wiggle dance!
 
 ### Game Modes
 1. **Story Mode:**
@@ -57,6 +63,7 @@ In Snowball Snowman, players become master snow sculptors in a winter wonderland
    - Circle-cutting guides
    - Perfect snowballs
    - Melting snow animations
+   - Snowman wiggle dance animation
 
 2. **Environment:**
    - Thermometer display
@@ -71,12 +78,14 @@ In Snowball Snowman, players become master snow sculptors in a winter wonderland
    - Level indicators
    - Menu buttons
 
-4. **Decorative Items:**
-   - Carrot noses
-   - Coal/button eyes
-   - Stick arms
-   - Scarves and hats
+4. **Decorative Items & Animations:**
+   - Carrot nose (with magical appearance effect)
+   - Coal/button eyes (with twinkling effect)
+   - Stick arms (with pop-out animation)
+   - Hats (with floating descent animation)
+   - Scarves (with wrapping animation)
    - Special unlockable decorations
+   - Celebration particle effects (sparkles, snowflakes)
 
 ### Art Guidelines
 - Keep designs simple and clear
