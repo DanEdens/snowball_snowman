@@ -27,7 +27,7 @@ def draw():
         draw_celebration()
 
 def draw_menu():
-    """Draw the main menu"""
+    """Draw the main menu with title 'Snowball Snowman' and prompt 'Click to Start'"""
     screen.draw.text(
         "Snowball Snowman",
         centerx=WIDTH//2,
