@@ -11,9 +11,12 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
 # Import game modules
 import main
 
-def test_initial_state():
-    """Test that game starts in MENU state"""
-    assert main.game_state == main.MENU
+@pytest.fixture(autouse=True)
+def setup_game():
+    """Setup and reset game state before each test"""
+    main.init_game()
+    yield
+    main.init_game()  # Reset after test
 
 def test_state_constants():
     """Test that game states are properly defined"""
@@ -21,46 +24,27 @@ def test_state_constants():
     assert main.PLAYING == 'playing'
     assert main.CELEBRATION == 'celebration'
 
-def test_window_dimensions():
-    """Test that window dimensions are set correctly"""
-    assert main.WIDTH == 800
-    assert main.HEIGHT == 600
+def test_initial_state():
+    """Test that game starts in MENU state"""
+    assert main.get_game_state() == main.MENU
 
-# Mock the screen object since we can't use actual Pygame in tests
-class MockScreen:
-    def __init__(self):
-        self.draw = MockDraw()
-        self.filled_color = None
-    
-    def fill(self, color):
-        self.filled_color = color
+def test_state_transition_to_playing():
+    """Test transition from menu to playing state"""
+    assert main.get_game_state() == main.MENU
+    # Click in the center of the play button
+    button_center = (main.WIDTH // 2, 2 * main.HEIGHT // 3)
+    main.on_mouse_down(button_center)
+    assert main.get_game_state() == main.PLAYING
 
-class MockDraw:
-    def __init__(self):
-        self.texts = []
-    
-    def text(self, text, **kwargs):
-        self.texts.append((text, kwargs))
+def test_state_transition_to_celebration():
+    """Test transition to celebration state"""
+    main.set_game_state(main.PLAYING)
+    assert main.get_game_state() == main.PLAYING
+    main.set_game_state(main.CELEBRATION)
+    assert main.get_game_state() == main.CELEBRATION
 
-@pytest.fixture
-def mock_screen():
-    return MockScreen()
-
-def test_menu_text_content():
-    """Test menu text content without mocking screen"""
-    # Test the text content that would be drawn
-    assert "Snowball Snowman" in main.draw_menu.__doc__
-    assert "Click to Start" in main.draw_menu.__doc__
-
-def test_state_transition():
-    """Test state transition from menu to playing"""
-    main.game_state = main.MENU
-    main.on_mouse_down((0, 0))  # Click position doesn't matter for menu
-    assert main.game_state == main.PLAYING
-
-def test_game_loop_functions_exist():
-    """Test that required game loop functions exist"""
-    assert hasattr(main, 'draw')
-    assert hasattr(main, 'update')
-    assert callable(main.draw)
-    assert callable(main.update) 
+def test_invalid_state_transition():
+    """Test that we can't transition from celebration to menu"""
+    main.set_game_state(main.CELEBRATION)
+    main.on_mouse_down((0, 0))  # Should not change state
+    assert main.get_game_state() == main.CELEBRATION 

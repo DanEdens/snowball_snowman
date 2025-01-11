@@ -12,9 +12,19 @@ from game.world import World
 from game.snowman import Snowman
 
 # Parse command line arguments
-parser = argparse.ArgumentParser(description='Snowball Snowman Game')
-parser.add_argument('--agent', action='store_true', help='Run in agent mode (auto-closes after 5 seconds)')
-args = parser.parse_args()
+parser = argparse.ArgumentParser()
+parser.add_argument('--agent', action='store_true', help='Enable agent mode for automated testing')
+
+# Only parse args if script is run directly
+if __name__ == '__main__':
+    args = parser.parse_args()
+    DEBUG_AUTO_CLOSE = args.agent
+else:
+    # For testing, create a mock args object
+    class Args:
+        def __init__(self):
+            self.agent = False
+    args = Args()
 
 # Initialize pygame
 pygame.init()
@@ -38,36 +48,52 @@ GREEN = (0, 255, 0, 100)  # Semi-transparent green for stacking indicator
 AGENT_MODE = args.agent  # True if running in agent/test mode
 DEBUG_START_TIME = pygame.time.get_ticks()  # Get the start time
 
-def find_stackable_snowball(new_ball, placed_balls, snowmen):
-    """Find a snowball that the new ball can stack on"""
-    # First check existing snowmen for incomplete stacks
-    for snowman in snowmen:
-        if not snowman.is_complete:
-            stackable = snowman.get_stackable_ball()
-            if stackable and new_ball.can_stack_on(stackable):
-                return stackable
-    
-    # Then check for new potential base balls
-    # Sort balls by size (largest first) to prefer stacking on larger balls
-    unattached_balls = [b for b in placed_balls if not b.stacked_on and not b.stacked_by]
-    sorted_balls = sorted(unattached_balls, key=lambda b: b.size, reverse=True)
-    
-    for ball in sorted_balls:
-        if new_ball.can_stack_on(ball):
-            return ball
-    return None
+# Game state variables
+_game_state = MENU  # Start in menu state
+player = None
+active_snowball = None
+placed_snowballs = []
+snowmen = []
 
-def reset_game():
-    """Reset the game state for testing"""
-    global game_state, player, active_snowball, placed_snowballs, snowmen
-    game_state = MENU
+def get_game_state():
+    """Get the current game state"""
+    global _game_state
+    return _game_state
+
+def set_game_state(state):
+    """Set the game state"""
+    global _game_state
+    _game_state = state
+
+def init_game():
+    """Initialize the game state"""
+    global _game_state, player, active_snowball, placed_snowballs, snowmen
+    set_game_state(MENU)
     player = None
     active_snowball = None
     placed_snowballs = []
     snowmen = []
 
-# Current game state
-game_state = MENU
+def reset_game():
+    """Reset the game objects without changing state"""
+    global player, active_snowball, placed_snowballs, snowmen
+    player = None
+    active_snowball = None
+    placed_snowballs = []
+    snowmen = []
+
+def handle_mouse_click(pos):
+    """Handle mouse click events"""
+    if get_game_state() == MENU:
+        if play_button_rect.collidepoint(pos):
+            set_game_state(PLAYING)
+            global player
+            player = Player(WIDTH // 2, HEIGHT // 2)
+            print("Game started!")
+
+def on_mouse_down(pos):
+    """Handle mouse down event (compatibility wrapper)"""
+    handle_mouse_click(pos)
 
 # Set up the display
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -79,26 +105,101 @@ play_button_img = pygame.image.load(os.path.join('src', 'images', 'play_button.p
 play_button_rect = play_button_img.get_rect(center=(WIDTH // 2, 2 * HEIGHT // 3))
 
 # Game objects
-player = None
-active_snowball = None
 world = World(WIDTH, HEIGHT)
-placed_snowballs = []
-snowmen = []  # List to track complete and in-progress snowmen
 
-def draw_menu():
-    """Draw the main menu with title and play button"""
+def draw_menu(screen):
+    """Draw the main menu with Snowball Snowman title and play button"""
+    screen.fill(BLACK)
+    
     # Draw title
-    font = pygame.font.Font(None, 60)
-    title = font.render("Snowball Snowman", True, (0, 0, 128))  # Navy blue
-    title_rect = title.get_rect(center=(WIDTH//2, HEIGHT//3))
-    screen.blit(title, title_rect)
+    title_font = pygame.font.Font(None, 64)
+    title_text = title_font.render("Snowball Snowman", True, WHITE)
+    title_rect = title_text.get_rect(center=(WIDTH // 2, HEIGHT // 3))
+    screen.blit(title_text, title_rect)
     
     # Draw play button
     screen.blit(play_button_img, play_button_rect)
-    pygame.draw.rect(screen, (255, 0, 0), play_button_rect, 1)  # Debug outline
+    
+    # Draw debug outline for play button in agent mode
+    if AGENT_MODE:
+        pygame.draw.rect(screen, (255, 0, 0), play_button_rect, 1)
 
-def draw_game():
-    """Draw the main game screen"""
+def update():
+    """Update game state"""
+    if get_game_state() == PLAYING:
+        handle_input()
+
+def draw_screen(screen):
+    """Draw the current game state"""
+    if get_game_state() == MENU:
+        draw_menu(screen)
+    elif get_game_state() == PLAYING:
+        draw_game(screen)
+
+def handle_input():
+    """Handle keyboard input for the game"""
+    global player, placed_snowballs, snowmen
+    
+    # Auto-close after 5 seconds in agent mode
+    if AGENT_MODE and pygame.time.get_ticks() - DEBUG_START_TIME > 5000:
+        print("Agent mode: Auto-closing after 5 seconds")
+        return False
+    
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            return False
+        elif event.type == pygame.MOUSEBUTTONDOWN and get_game_state() == MENU:
+            if play_button_rect.collidepoint(event.pos):
+                set_game_state(PLAYING)
+                player = Player(WIDTH // 2, HEIGHT // 2)
+                print("Game started!")
+    
+    if get_game_state() == PLAYING and player:
+        keys = pygame.key.get_pressed()
+        dx = keys[pygame.K_RIGHT] - keys[pygame.K_LEFT]
+        dy = keys[pygame.K_DOWN] - keys[pygame.K_UP]
+        player.move(dx, dy)
+        
+        if keys[pygame.K_SPACE]:
+            player.start_rolling(world)
+        elif player.rolling_snowball:
+            placed = player.place_snowball(world)
+            if placed:
+                # Try to stack the snowball
+                stackable = find_stackable_snowball(placed, placed_snowballs, snowmen)
+                if stackable:
+                    placed.stack_on(stackable)
+                    print("Stacked snowball!")
+                    
+                    # Check if this creates or adds to a snowman
+                    added_to_snowman = False
+                    for snowman in snowmen:
+                        if stackable in snowman.all_balls:
+                            snowman.add_ball(placed)
+                            added_to_snowman = True
+                            if snowman.is_complete:
+                                print("Snowman completed!")
+                                if get_game_state() != CELEBRATION:
+                                    set_game_state(CELEBRATION)
+                            break
+                    
+                    if not added_to_snowman and not stackable.stacked_on:
+                        # Start a new snowman with these balls
+                        snowmen.append(Snowman(stackable))
+                        snowmen[-1].add_ball(placed)
+                
+                placed_snowballs.append(placed)
+        
+        # Update all snowballs
+        if player.rolling_snowball:
+            player.rolling_snowball.update(player.position)
+        for snowball in placed_snowballs:
+            snowball.update(snowball.position)
+    
+    return True
+
+def draw_game(screen):
+    """Draw the game screen with player, snowballs, and zones"""
     # Draw world zones
     pygame.draw.rect(screen, world.rolling_zone_color, world.rolling_zone)
     pygame.draw.rect(screen, world.building_zone_color, world.building_zone)
@@ -169,90 +270,74 @@ def draw_game():
                     1  # Line width
                 )
 
-def draw():
-    """Draw the current game state"""
-    screen.fill((255, 255, 255))  # White background
-    
-    if game_state == MENU:
-        draw_menu()
-    elif game_state == PLAYING:
-        draw_game()
-    elif game_state == CELEBRATION:
-        pass  # TODO: Implement celebration
-    
-    pygame.display.flip()
+# Initialize screen
+screen = None
 
-def handle_input():
-    """Handle keyboard and mouse input"""
-    global game_state, player, placed_snowballs, snowmen
-    
-    # Auto-close after 5 seconds in agent mode
-    if AGENT_MODE and pygame.time.get_ticks() - DEBUG_START_TIME > 5000:
-        print("Agent mode: Auto-closing after 5 seconds")
-        return False
-    
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            return False
-        elif event.type == pygame.MOUSEBUTTONDOWN and game_state == MENU:
-            if play_button_rect.collidepoint(event.pos):
-                game_state = PLAYING
-                player = Player(WIDTH // 2, HEIGHT // 2)
-                print("Game started!")
-    
-    if game_state == PLAYING and player:
-        keys = pygame.key.get_pressed()
-        dx = keys[pygame.K_RIGHT] - keys[pygame.K_LEFT]
-        dy = keys[pygame.K_DOWN] - keys[pygame.K_UP]
-        player.move(dx, dy)
-        
-        if keys[pygame.K_SPACE]:
-            player.start_rolling(world)
-        elif player.rolling_snowball:
-            placed = player.place_snowball(world)
-            if placed:
-                # Try to stack the snowball
-                stackable = find_stackable_snowball(placed, placed_snowballs, snowmen)
-                if stackable:
-                    placed.stack_on(stackable)
-                    print("Stacked snowball!")
-                    
-                    # Check if this creates or adds to a snowman
-                    added_to_snowman = False
-                    for snowman in snowmen:
-                        if stackable in snowman.all_balls:
-                            snowman.add_ball(placed)
-                            added_to_snowman = True
-                            if snowman.is_complete:
-                                print("Snowman completed!")
-                                if game_state != CELEBRATION:
-                                    game_state = CELEBRATION
-                            break
-                    
-                    if not added_to_snowman and not stackable.stacked_on:
-                        # Start a new snowman with these balls
-                        snowmen.append(Snowman(stackable))
-                        snowmen[-1].add_ball(placed)
-                
-                placed_snowballs.append(placed)
-        
-        # Update all snowballs
-        if player.rolling_snowball:
-            player.rolling_snowball.update(player.position)
-        for snowball in placed_snowballs:
-            snowball.update(snowball.position)
-    
-    return True
+def init_screen():
+    """Initialize the game screen"""
+    global screen
+    if not screen:
+        screen = pygame.display.set_mode((WIDTH, HEIGHT))
+    return screen
+
+def draw():
+    """Draw the current game state (compatibility wrapper)"""
+    global screen
+    if not screen:
+        screen = init_screen()
+    draw_screen(screen)
 
 def main():
     """Main game loop"""
+    global game_state
+    pygame.init()
+    pygame.font.init()
+    screen = init_screen()
+    pygame.display.set_caption("Snowball Snowman")
+    
+    # Initialize game state
+    init_game()
+    
+    clock = pygame.time.Clock()
     running = True
+    start_time = pygame.time.get_ticks()
+    
     while running:
-        running = handle_input()
-        draw()
-        clock.tick(60)  # 60 FPS
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                handle_mouse_click(event.pos)
+        
+        update()
+        draw_screen(screen)
+        pygame.display.flip()
+        clock.tick(60)
+        
+        if DEBUG_AUTO_CLOSE and pygame.time.get_ticks() - start_time > 5000:
+            print("Debug: Auto-closing after 5 seconds")
+            running = False
     
     pygame.quit()
+
+def find_stackable_snowball(new_ball, placed_balls, snowmen):
+    """Find a snowball that the new ball can stack on"""
+    # First check existing snowmen for incomplete stacks
+    for snowman in snowmen:
+        if not snowman.is_complete:
+            stackable = snowman.get_stackable_ball()
+            if stackable and new_ball.can_stack_on(stackable):
+                return stackable
+    
+    # Then check for new potential base balls
+    # Sort balls by size (largest first) to prefer stacking on larger balls
+    unattached_balls = [b for b in placed_balls if not b.stacked_on and not b.stacked_by]
+    sorted_balls = sorted(unattached_balls, key=lambda b: b.size, reverse=True)
+    
+    for ball in sorted_balls:
+        if new_ball.can_stack_on(ball):
+            return ball
+    return None
 
 if __name__ == '__main__':
     main()

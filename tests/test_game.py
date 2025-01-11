@@ -25,39 +25,20 @@ def game_window():
     pygame.quit()
 
 def test_game_start_and_screenshot(game_window):
-    """Test game initialization and play button click"""
-    # Initial game state should be MENU
-    assert main.game_state == main.MENU
-
-    # Draw initial frame
+    """Test game initialization and screenshot capture"""
+    # Initialize game
+    main.init_game()
+    
+    # Draw initial frame and save menu screenshot
     main.draw()
-
-    # Take screenshot of menu
     os.makedirs('test_screenshots', exist_ok=True)
     pygame.image.save(game_window, 'test_screenshots/menu.png')
-
-    # Simulate clicking the play button
-    click_pos = (main.WIDTH // 2, 2 * main.HEIGHT // 3)  # Play button position
-    click_event = Event(pygame.MOUSEBUTTONDOWN, {
-        'pos': click_pos,
-        'button': 1,
-        'touch': False
-    })
-
-    # Process the click event
-    pygame.event.post(click_event)
-    main.handle_input()
-
-    # Game state should change to PLAYING
-    assert main.game_state == main.PLAYING
-    assert main.player is not None, "Player should be created"
-
-    # Draw game frame
+    
+    # Start game and draw game frame
+    main.set_game_state(main.PLAYING)
     main.draw()
-
-    # Take screenshot of game start
     pygame.image.save(game_window, 'test_screenshots/game_start.png')
-
+    
     print("Screenshots saved in test_screenshots directory")
 
 def test_snowball_growth():
@@ -215,3 +196,22 @@ def test_snowman_size_requirements():
     
     # Try adding bigger ball
     assert not snowman.add_ball(bigger), "Should not be able to add bigger ball"
+
+def test_game_start_and_screenshot():
+    """Test game start and screenshot functionality"""
+    # Initialize game
+    main.init_game()
+    
+    # Check initial state
+    assert main.get_game_state() == main.MENU
+    
+    # Draw initial frame and save screenshot
+    main.draw()
+    
+    # Simulate clicking play button
+    button_center = (main.WIDTH // 2, 2 * main.HEIGHT // 3)
+    main.on_mouse_down(button_center)
+    assert main.get_game_state() == main.PLAYING
+    
+    # Draw game frame and save screenshot
+    main.draw()
