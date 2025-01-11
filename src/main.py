@@ -25,6 +25,14 @@ CELEBRATION = 'celebration'
 DEBUG_AUTO_CLOSE = True  # Set to True to auto-close after 5 seconds
 DEBUG_START_TIME = pygame.time.get_ticks()  # Get the start time
 
+def reset_game():
+    """Reset the game state for testing"""
+    global game_state, player, active_snowball, placed_snowballs
+    game_state = MENU
+    player = None
+    active_snowball = None
+    placed_snowballs = []
+
 # Current game state
 game_state = MENU
 
