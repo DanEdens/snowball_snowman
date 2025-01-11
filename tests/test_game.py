@@ -28,14 +28,14 @@ def test_game_start_and_screenshot(game_window):
     """Test game initialization and play button click"""
     # Initial game state should be MENU
     assert main.game_state == main.MENU
-    
+
     # Draw initial frame
     main.draw()
-    
+
     # Take screenshot of menu
     os.makedirs('test_screenshots', exist_ok=True)
     pygame.image.save(game_window, 'test_screenshots/menu.png')
-    
+
     # Simulate clicking the play button
     click_pos = (main.WIDTH // 2, 2 * main.HEIGHT // 3)  # Play button position
     click_event = Event(pygame.MOUSEBUTTONDOWN, {
@@ -43,21 +43,21 @@ def test_game_start_and_screenshot(game_window):
         'button': 1,
         'touch': False
     })
-    
+
     # Process the click event
     pygame.event.post(click_event)
     main.handle_input()
-    
+
     # Game state should change to PLAYING
     assert main.game_state == main.PLAYING
     assert main.player is not None, "Player should be created"
-    
+
     # Draw game frame
     main.draw()
-    
+
     # Take screenshot of game start
     pygame.image.save(game_window, 'test_screenshots/game_start.png')
-    
+
     print("Screenshots saved in test_screenshots directory")
 
 def test_snowball_growth():
