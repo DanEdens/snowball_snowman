@@ -1,11 +1,16 @@
 """
 Snowball Snowman - A creative puzzle game about building snowmen!
 """
-import pgzrun
 import os
 import pygame
 from pygame import Rect, Surface
-from pgzero.actor import Actor
+from game.player import Player
+from game.snowman import Snowball
+from game.world import World
+
+# Initialize pygame
+pygame.init()
+pygame.font.init()
 
 # Window dimensions
 WIDTH = 800
@@ -19,97 +24,98 @@ CELEBRATION = 'celebration'
 # Current game state
 game_state = MENU
 
-# Debug info
-print(f"Current working directory: {os.getcwd()}")
-print(f"Looking for image at: {os.path.join('images', 'play_button.png')}")
+# Set up the display
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Snowball Snowman")
+clock = pygame.time.Clock()
 
 # Load play button
-try:
-    play_button = Actor('play_button')  # Pygame Zero will look in the images directory automatically
-    print("Successfully loaded play button image")
-except Exception as e:
-    print(f"Error loading play button: {e}")
+play_button_img = pygame.image.load(os.path.join('src', 'images', 'play_button.png'))
+play_button_rect = play_button_img.get_rect(center=(WIDTH // 2, 2 * HEIGHT // 3))
 
-play_button.center = (WIDTH // 2, 2 * HEIGHT // 3)  # Position the button
-print(f"Play button position: {play_button.center}")
+# Game objects
+player = None
+active_snowball = None
+world = World(WIDTH, HEIGHT)
+placed_snowballs = []
+
+def draw_menu():
+    """Draw the main menu with title and play button"""
+    # Draw title
+    font = pygame.font.Font(None, 60)
+    title = font.render("Snowball Snowman", True, (0, 0, 128))  # Navy blue
+    title_rect = title.get_rect(center=(WIDTH//2, HEIGHT//3))
+    screen.blit(title, title_rect)
+    
+    # Draw play button
+    screen.blit(play_button_img, play_button_rect)
+    pygame.draw.rect(screen, (255, 0, 0), play_button_rect, 1)  # Debug outline
+
+def draw_game():
+    """Draw the main game screen"""
+    world.draw(screen)
+    
+    if player:
+        screen.blit(player.actor._surf, player.actor._surf.get_rect(center=player.position))
+        if player.rolling_snowball:
+            player.rolling_snowball.draw(screen)
+    
+    for snowball in placed_snowballs:
+        snowball.draw(screen)
 
 def draw():
-    """Called every frame to draw the game"""
-    screen.fill('white')  # White background like snow
-
+    """Draw the current game state"""
+    screen.fill((255, 255, 255))  # White background
+    
     if game_state == MENU:
         draw_menu()
     elif game_state == PLAYING:
         draw_game()
     elif game_state == CELEBRATION:
-        draw_celebration()
-
-def draw_menu():
-    """Draw the main menu with title and play button"""
-    # Draw title
-    screen.draw.text(
-        "Snowball Snowman",
-        centerx=WIDTH//2,
-        centery=HEIGHT//3,
-        fontsize=60,
-        color="navy"
-    )
-
-    # Draw play button and debug rectangle
-    play_button.draw()
-    screen.draw.rect(Rect(play_button.left, play_button.top, play_button.width, play_button.height), "red")  # Debug outline
-
-def draw_game():
-    """Draw the main game screen"""
-    # TODO: Implement game drawing
-    pass
-
-def draw_celebration():
-    """Draw the celebration animation"""
-    # TODO: Implement celebration
-    pass
-
-def on_mouse_down(pos):
-    """Handle mouse clicks"""
-    global game_state
-    if game_state == MENU:
-        if play_button.collidepoint(pos):
-            game_state = PLAYING
-            print("Play button clicked!")
-
-def update():
-    """Update game logic"""
-    pass
-
-# Take a preview screenshot before starting the game
-def take_preview_screenshot():
-    """Take a preview screenshot of the initial menu state"""
-    # Initialize pygame display
-    pygame.init()
-    preview_surface = Surface((WIDTH, HEIGHT))
-    preview_surface.fill((255, 255, 255))  # White background
+        pass  # TODO: Implement celebration
     
-    # Draw title
-    font = pygame.font.Font(None, 60)
-    title = font.render("Snowball Snowman", True, (0, 0, 128))  # Navy blue
-    title_rect = title.get_rect(center=(WIDTH//2, HEIGHT//3))
-    preview_surface.blit(title, title_rect)
+    pygame.display.flip()
+
+def handle_input():
+    """Handle keyboard and mouse input"""
+    global game_state, player
     
-    # Draw play button
-    if hasattr(play_button._surf, 'get_rect'):
-        preview_surface.blit(play_button._surf, play_button._surf.get_rect(center=play_button.center))
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            return False
+        elif event.type == pygame.MOUSEBUTTONDOWN and game_state == MENU:
+            if play_button_rect.collidepoint(event.pos):
+                game_state = PLAYING
+                player = Player(WIDTH // 2, HEIGHT // 2)
+                print("Game started!")
     
-    # Draw debug rectangle
-    pygame.draw.rect(preview_surface, (255, 0, 0), Rect(play_button.left, play_button.top, play_button.width, play_button.height), 1)
+    if game_state == PLAYING and player:
+        keys = pygame.key.get_pressed()
+        dx = keys[pygame.K_RIGHT] - keys[pygame.K_LEFT]
+        dy = keys[pygame.K_DOWN] - keys[pygame.K_UP]
+        player.move(dx, dy)
+        
+        if keys[pygame.K_SPACE]:
+            player.start_rolling(world)
+        elif player.rolling_snowball:
+            placed = player.place_snowball(world)
+            if placed:
+                placed_snowballs.append(placed)
+        
+        if player.rolling_snowball:
+            player.rolling_snowball.update(player.position)
     
-    # Save screenshot
-    os.makedirs('screenshots', exist_ok=True)
-    pygame.image.save(preview_surface, 'screenshots/preview.png')
-    print("Preview screenshot saved as screenshots/preview.png")
+    return True
+
+def main():
+    """Main game loop"""
+    running = True
+    while running:
+        running = handle_input()
+        draw()
+        clock.tick(60)  # 60 FPS
+    
     pygame.quit()
 
-# Take preview screenshot before starting the game
-take_preview_screenshot()
-
-# Start the game
-pgzrun.go()  # Start the game
+if __name__ == '__main__':
+    main()

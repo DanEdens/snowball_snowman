@@ -1,5 +1,17 @@
 # Development Roadmap
 
+## Current Issues
+- Pygame Zero compatibility issues with Python 3.11
+- Need to switch from Pygame Zero to pure Pygame for better control
+- Drawing system needs to be unified (currently mixing Pygame Zero and Pygame methods)
+
+## Lessons Learned
+- Pygame Zero can be problematic with newer Python versions
+- Direct Pygame implementation gives more control over the game loop
+- Keeping clear separation between game logic and rendering is crucial
+- Virtual environment setup is critical for consistent development
+- PYTHONPATH management is important for module imports
+
 ## Current Status
 - ✅ Basic project structure
 - ✅ Game window setup with Pygame Zero

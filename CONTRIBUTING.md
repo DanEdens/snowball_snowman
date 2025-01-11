@@ -10,6 +10,26 @@ Thank you for your interest in contributing to Snowball Snowman! This document p
 - pkg-config (for Mac users)
 - Git
 
+### Virtual Environment Tips
+- When using pgzero, make sure to install both pygame and pgzero:
+  ```bash
+  pip install pygame pgzero
+  ```
+- If you get "ModuleNotFoundError: No module named 'pgzrun'", try:
+  ```bash
+  pip uninstall pgzero
+  pip install pgzero --no-cache-dir
+  ```
+- Always activate the virtual environment before running:
+  ```bash
+  source venv/bin/activate  # On Unix/MacOS
+  venv\Scripts\activate     # On Windows
+  ```
+- If modules still aren't found, try setting PYTHONPATH:
+  ```bash
+  PYTHONPATH=$PYTHONPATH:./src python src/main.py
+  ```
+
 ### Setting Up Your Development Environment
 1. Clone the repository:
    ```bash
