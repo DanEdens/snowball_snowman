@@ -25,6 +25,16 @@ CELEBRATION = 'celebration'
 DEBUG_AUTO_CLOSE = True  # Set to True to auto-close after 5 seconds
 DEBUG_START_TIME = pygame.time.get_ticks()  # Get the start time
 
+def find_stackable_snowball(new_ball, placed_balls):
+    """Find a snowball that the new ball can stack on"""
+    # Sort balls by size (largest first) to prefer stacking on larger balls
+    sorted_balls = sorted(placed_balls, key=lambda b: b.size, reverse=True)
+    
+    for ball in sorted_balls:
+        if new_ball.can_stack_on(ball):
+            return ball
+    return None
+
 def reset_game():
     """Reset the game state for testing"""
     global game_state, player, active_snowball, placed_snowballs
@@ -127,7 +137,7 @@ def draw():
 
 def handle_input():
     """Handle keyboard and mouse input"""
-    global game_state, player
+    global game_state, player, placed_snowballs
     
     # Debug auto-close after 5 seconds
     if DEBUG_AUTO_CLOSE and pygame.time.get_ticks() - DEBUG_START_TIME > 5000:
@@ -154,10 +164,18 @@ def handle_input():
         elif player.rolling_snowball:
             placed = player.place_snowball(world)
             if placed:
+                # Try to stack the snowball
+                stackable = find_stackable_snowball(placed, placed_snowballs)
+                if stackable:
+                    placed.stack_on(stackable)
+                    print("Stacked snowball!")
                 placed_snowballs.append(placed)
         
+        # Update all snowballs
         if player.rolling_snowball:
             player.rolling_snowball.update(player.position)
+        for snowball in placed_snowballs:
+            snowball.update(snowball.position)
     
     return True
 

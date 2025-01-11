@@ -116,3 +116,48 @@ def test_snowball_placement():
     placed_ball = player.place_snowball(world)
     assert placed_ball is not None, "Should be able to place snowball in building zone"
     assert player.rolling_snowball is None, "Rolling snowball should be cleared after placing" 
+
+def test_snowball_stacking():
+    """Test snowball stacking mechanics"""
+    # Create two snowballs of different sizes
+    big_ball = Snowball(100, 100)
+    small_ball = Snowball(100, 50)
+    
+    # Make big ball bigger
+    big_ball.size = 50
+    small_ball.size = 30
+    
+    # Test stacking conditions
+    assert small_ball.can_stack_on(big_ball), "Small ball should be able to stack on big ball"
+    assert not big_ball.can_stack_on(small_ball), "Big ball should not stack on small ball"
+    
+    # Test stacking
+    assert small_ball.stack_on(big_ball), "Stacking should succeed"
+    assert small_ball.stacked_on == big_ball, "Small ball should reference big ball"
+    assert big_ball.stacked_by == small_ball, "Big ball should reference small ball"
+    
+    # Test position updating
+    small_ball.update(small_ball.position)
+    expected_y = big_ball.position.y - big_ball.size - small_ball.size
+    assert abs(small_ball.position.y - expected_y) < 0.1, "Small ball should be positioned above big ball"
+
+def test_invalid_stacking():
+    """Test invalid stacking scenarios"""
+    ball1 = Snowball(100, 100)
+    ball2 = Snowball(100, 50)
+    ball3 = Snowball(100, 0)
+    
+    # Make all balls the same size
+    ball1.size = ball2.size = ball3.size = 30
+    
+    # Test stacking same-sized balls
+    assert not ball2.can_stack_on(ball1), "Same-sized balls should not stack"
+    
+    # Test stacking on already stacked ball
+    ball2.stack_on(ball1)
+    assert not ball3.can_stack_on(ball1), "Cannot stack on ball that already has something stacked"
+    
+    # Test unstacking
+    ball2.unstack()
+    assert ball1.stacked_by is None, "Ball1 should not have anything stacked on it"
+    assert ball2.stacked_on is None, "Ball2 should not be stacked on anything" 
