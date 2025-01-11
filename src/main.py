@@ -3,7 +3,8 @@ Snowball Snowman - A creative puzzle game about building snowmen!
 """
 import pgzrun
 import os
-from pygame import Rect
+import pygame
+from pygame import Rect, Surface
 from pgzero.actor import Actor
 
 # Window dimensions
@@ -80,4 +81,35 @@ def update():
     """Update game logic"""
     pass
 
+# Take a preview screenshot before starting the game
+def take_preview_screenshot():
+    """Take a preview screenshot of the initial menu state"""
+    # Initialize pygame display
+    pygame.init()
+    preview_surface = Surface((WIDTH, HEIGHT))
+    preview_surface.fill((255, 255, 255))  # White background
+    
+    # Draw title
+    font = pygame.font.Font(None, 60)
+    title = font.render("Snowball Snowman", True, (0, 0, 128))  # Navy blue
+    title_rect = title.get_rect(center=(WIDTH//2, HEIGHT//3))
+    preview_surface.blit(title, title_rect)
+    
+    # Draw play button
+    if hasattr(play_button._surf, 'get_rect'):
+        preview_surface.blit(play_button._surf, play_button._surf.get_rect(center=play_button.center))
+    
+    # Draw debug rectangle
+    pygame.draw.rect(preview_surface, (255, 0, 0), Rect(play_button.left, play_button.top, play_button.width, play_button.height), 1)
+    
+    # Save screenshot
+    os.makedirs('screenshots', exist_ok=True)
+    pygame.image.save(preview_surface, 'screenshots/preview.png')
+    print("Preview screenshot saved as screenshots/preview.png")
+    pygame.quit()
+
+# Take preview screenshot before starting the game
+take_preview_screenshot()
+
+# Start the game
 pgzrun.go()  # Start the game
