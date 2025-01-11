@@ -2,6 +2,10 @@
 
 A creative puzzle game about the art and science of snowman building! Shape, craft, and race against nature's elements to build the perfect snowman.
 
+## Inspiration
+![Snowman Building Inspiration](docs/inspiration/cover_art_example.jpg)
+*Our inspiration for the snow shaping and building mechanics*
+
 ## Game Overview
 
 In Snowball Snowman, players become master snow sculptors in a winter wonderland where temperature and time are your greatest challenges:
