@@ -21,6 +21,10 @@ MENU = 'menu'
 PLAYING = 'playing'
 CELEBRATION = 'celebration'
 
+# Debug settings
+DEBUG_AUTO_CLOSE = True  # Set to True to auto-close after 5 seconds
+DEBUG_START_TIME = pygame.time.get_ticks()  # Get the start time
+
 # Current game state
 game_state = MENU
 
@@ -116,6 +120,11 @@ def draw():
 def handle_input():
     """Handle keyboard and mouse input"""
     global game_state, player
+    
+    # Debug auto-close after 5 seconds
+    if DEBUG_AUTO_CLOSE and pygame.time.get_ticks() - DEBUG_START_TIME > 5000:
+        print("Debug: Auto-closing after 5 seconds")
+        return False
     
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
