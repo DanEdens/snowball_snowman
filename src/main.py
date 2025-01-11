@@ -53,15 +53,52 @@ def draw_menu():
 
 def draw_game():
     """Draw the main game screen"""
-    world.draw(screen)
+    # Draw world zones
+    pygame.draw.rect(screen, world.rolling_zone_color, world.rolling_zone)
+    pygame.draw.rect(screen, world.building_zone_color, world.building_zone)
     
+    # Draw zone labels
+    font = pygame.font.Font(None, 36)
+    snowball_text = font.render("SNOWBALL", True, (255, 0, 0))  # Red
+    snowman_text = font.render("SNOWMAN", True, (0, 100, 0))  # Dark green
+    
+    screen.blit(snowball_text, (world.width//4 - snowball_text.get_width()//2, 30))
+    screen.blit(snowman_text, (3*world.width//4 - snowman_text.get_width()//2, 30))
+    
+    # Draw player
     if player:
-        screen.blit(player.actor._surf, player.actor._surf.get_rect(center=player.position))
+        player.draw(screen)
         if player.rolling_snowball:
-            player.rolling_snowball.draw(screen)
+            # Draw snowball
+            pygame.draw.circle(
+                screen,
+                (255, 255, 255),  # White
+                (int(player.rolling_snowball.position.x), int(player.rolling_snowball.position.y)),
+                int(player.rolling_snowball.size)
+            )
+            pygame.draw.circle(
+                screen,
+                (0, 0, 0),  # Black outline
+                (int(player.rolling_snowball.position.x), int(player.rolling_snowball.position.y)),
+                int(player.rolling_snowball.size),
+                1  # Line width
+            )
     
+    # Draw placed snowballs
     for snowball in placed_snowballs:
-        snowball.draw(screen)
+        pygame.draw.circle(
+            screen,
+            (255, 255, 255),  # White
+            (int(snowball.position.x), int(snowball.position.y)),
+            int(snowball.size)
+        )
+        pygame.draw.circle(
+            screen,
+            (0, 0, 0),  # Black outline
+            (int(snowball.position.x), int(snowball.position.y)),
+            int(snowball.size),
+            1  # Line width
+        )
 
 def draw():
     """Draw the current game state"""

@@ -19,16 +19,3 @@ class Snowball:
         if self.is_rolling:
             self.position = Vector2(player_pos)
             self.grow()
-    
-    def draw(self, screen):
-        """Draw the snowball"""
-        screen.draw.filled_circle(
-            (self.position.x, self.position.y),
-            int(self.size),
-            'white'
-        )
-        screen.draw.circle(
-            (self.position.x, self.position.y),
-            int(self.size),
-            'black'
-        )
