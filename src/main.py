@@ -2,12 +2,19 @@
 Snowball Snowman - A creative puzzle game about building snowmen!
 """
 import os
+import sys
+import argparse
 import pygame
 from pygame import Rect, Surface
 from game.player import Player
 from game.snowman import Snowball
 from game.world import World
 from game.snowman import Snowman
+
+# Parse command line arguments
+parser = argparse.ArgumentParser(description='Snowball Snowman Game')
+parser.add_argument('--agent', action='store_true', help='Run in agent mode (auto-closes after 5 seconds)')
+args = parser.parse_args()
 
 # Initialize pygame
 pygame.init()
@@ -28,7 +35,7 @@ BLACK = (0, 0, 0)
 GREEN = (0, 255, 0, 100)  # Semi-transparent green for stacking indicator
 
 # Debug settings
-DEBUG_AUTO_CLOSE = True  # Set to True to auto-close after 5 seconds
+AGENT_MODE = args.agent  # True if running in agent/test mode
 DEBUG_START_TIME = pygame.time.get_ticks()  # Get the start time
 
 def find_stackable_snowball(new_ball, placed_balls, snowmen):
@@ -179,9 +186,9 @@ def handle_input():
     """Handle keyboard and mouse input"""
     global game_state, player, placed_snowballs, snowmen
     
-    # Debug auto-close after 5 seconds
-    if DEBUG_AUTO_CLOSE and pygame.time.get_ticks() - DEBUG_START_TIME > 5000:
-        print("Debug: Auto-closing after 5 seconds")
+    # Auto-close after 5 seconds in agent mode
+    if AGENT_MODE and pygame.time.get_ticks() - DEBUG_START_TIME > 5000:
+        print("Agent mode: Auto-closing after 5 seconds")
         return False
     
     for event in pygame.event.get():

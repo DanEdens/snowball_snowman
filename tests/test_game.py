@@ -7,6 +7,9 @@ from pygame.event import Event
 # Add src directory to Python path
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
 
+# Set up command line arguments for agent mode
+sys.argv.extend(['--agent'])
+
 from game.player import Player
 from game.snowman import Snowball, Snowman
 from game.world import World

@@ -2,6 +2,24 @@
 
 Thank you for your interest in contributing to Snowball Snowman! This document provides guidelines and instructions for contributing to the project.
 
+## For AI Agents
+When running tests or debugging the game, use the `--agent` flag to enable agent mode:
+```bash
+python src/main.py --agent  # Game will auto-close after 5 seconds
+```
+
+This mode is specifically designed for automated testing and AI-assisted development. It will:
+- Auto-close the game after 5 seconds
+- Print agent-specific debug messages
+- Take screenshots automatically
+- Help maintain consistent test environments
+
+### AI Development Tips
+- Always use `--agent` flag when running the game during development
+- Check test_screenshots directory for visual verification
+- Use pytest for automated testing
+- Monitor agent-specific debug messages in console output
+
 ## Development Environment Setup
 
 ### Prerequisites
