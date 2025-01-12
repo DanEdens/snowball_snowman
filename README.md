@@ -1,5 +1,9 @@
 # Snowball Snowman
 
+## inspiration
+
+![inspiration](assets/20250111133309.png)
+
 A delightful Python game where you build a snowman by rolling and stacking snowballs, with a celebratory animation when completed!
 
 ## Running the Game
@@ -138,4 +142,4 @@ python -m pytest
 See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed contribution guidelines.
 
 ## License
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details. 
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
